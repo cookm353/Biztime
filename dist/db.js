@@ -1,5 +1,7 @@
 const { Client } = require("pg");
+const password = require("./shh");
 let DB_URI;
+process.env.PGPASSWORD = password;
 if (process.env.NODE_ENV === "test") {
     DB_URI = "postgresql:///biztime_test";
 }
