@@ -1,4 +1,5 @@
 const express = require("express")
+const morgan = require('morgan')
 
 const app = express();
 const ExpressError = require("./expressError")
@@ -6,6 +7,9 @@ const companyRouter = require("./routes/companies")
 const invoiceRouter = require("./routes/invoices")
 
 app.use(express.json())
+app.use('/companies', companyRouter)
+app.use('/invoices', invoiceRouter)
+app.use(morgan())
 
 /** 404 handler */
 app.use(function(req, res, next) {
