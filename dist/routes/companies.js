@@ -21,8 +21,6 @@ companyRouter.get("/:code", async function get(req, resp, next) {
             description: results.rows[0].description,
             invoices: invoiceIds
         };
-        console.log(invoiceIds);
-        // return resp.json({"company": results.rows})
         return resp.json({ "company": companyinfo });
     }
     catch (err) {
