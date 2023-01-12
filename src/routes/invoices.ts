@@ -38,7 +38,7 @@ invoiceRouter.get("/", async function list(req, resp, next) {
     // Return all invoices
     try {
         const results = await invoice.getAll()
-        return resp.json(results.rows)
+        return resp.json({invoices: results.rows})
     } catch (err) {
         return next(err)
     }
