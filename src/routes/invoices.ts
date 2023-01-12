@@ -14,7 +14,21 @@ invoiceRouter.get("/:id", async function get(req, resp, next) {
         if (!results.rows[0]) {
             return next()
         }
-        return await resp.json({invoice: results.rows})
+        const respObject = {
+            id: results.rows[0].id,
+            amt: results.rows[0].amt,
+            paid: results.rows[0].paid,
+            add_date: results.rows[0].add_date,
+            paid_date: results.rows[0].paid_date,
+            company: {
+                code: results.rows[0].comp_code,
+                name: results.rows[0].name,
+                description: results.rows[0].description
+            }
+        }
+
+        // return await resp.json({invoice: results.rows[0]})
+        return await resp.json({invoice: respObject})
     } catch (err) {
         return next(err)
     }
