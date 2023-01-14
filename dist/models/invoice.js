@@ -8,6 +8,13 @@ class Invoice {
             WHERE id = $1`, [id]);
         return results;
     }
+    static async getByCode(code) {
+        // Return invoices for specified company
+        const results = await db.query(`SELECT id, amt, paid, add_date, paid_date, comp_code
+            FROM invoices
+            WHERE comp_code = $1`, [code]);
+        return results;
+    }
     static async getAll() {
         // Return all invoices
         return db.query('SELECT id, comp_code FROM invoices');

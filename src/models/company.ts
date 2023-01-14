@@ -6,11 +6,11 @@ class Company {
     static async get(code: string) {
         // Return specified company or 404
         // const exists = Company.exists(code)
+        console.log(code)
 
         const result = await db.query(
-            `SELECT code, name, description, id
-            FROM companies JOIN invoices
-                ON code = comp_code
+            `SELECT code, name, description
+            FROM companies
             WHERE code = $1`, [code]
         )
 

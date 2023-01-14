@@ -1,6 +1,7 @@
 const express = require('express');
 const expressError = require('../expressError');
 const company = require("../models/company");
+const invoice = require('../models/invoice');
 const db = require('../db');
 let companyRouter = express.Router();
 companyRouter.get("/:code", async function get(req, resp, next) {
@@ -8,20 +9,18 @@ companyRouter.get("/:code", async function get(req, resp, next) {
     try {
         const { code } = req.params;
         const results = await company.get(code);
+        console.log(results.rows);
         if (!results.rows[0]) {
             return next();
         }
-        const invoiceIds = results.rows.reduce((ids, row) => {
-            ids.push(row.id);
-            return ids;
-        }, []);
-        const companyinfo = {
+        const invoices = await invoice.getByCode(code);
+        const companyInfo = {
             code: results.rows[0].code,
             name: results.rows[0].name,
             description: results.rows[0].description,
-            invoices: invoiceIds
+            invoices: invoices.rows
         };
-        return resp.json({ "company": companyinfo });
+        return resp.json({ "company": companyInfo });
     }
     catch (err) {
         return next(err);
