@@ -38,10 +38,10 @@ class Invoice {
         )
     }
 
-    static async update(id: number, amt: number, paid: boolean) {
+    static async update(id: number, amt: number, paid) {
         // Update invoice amount
         const results = await Invoice.exists(id)
-        const d = new Date()
+        const currDate = new Date()
         if(!results) return "Not found"
         
         const currInvoice = await db.query(
@@ -51,25 +51,25 @@ class Invoice {
             [id]
         )
         
+        paid = (paid === 'true')
         const currAmt = currInvoice.rows[0].amt
         const isPaid = currInvoice.rows[0].paid
 
-        if ( isPaid === false && Boolean(paid)) {
+        if ( isPaid === false && paid) {
             return db.query(
                 `UPDATE invoices SET amt=$1, paid=$2, paid_date=$3
                 WHERE id = $4
                 RETURNING id, comp_code, amt, paid, add_date, paid_date`,
-                [amt, paid, d, id]
+                [amt, paid, currDate, id]
              )
-        } else if ( !Boolean(paid) ) {
+        } else if ( !paid ) {
             return db.query(
-                `UPDATE invoices SET amt=$1, paid=$3, paid_date=$4
-                WHERE id = $4
+                `UPDATE invoices SET amt=$1, paid=$2, paid_date=NULL
+                WHERE id = $3
                 RETURNING id, comp_code, amt, paid, add_date, paid_date`,
-                [amt, paid, null, id]
-                )
+                [amt, false, id]
+            )
         } else {
-            console.log("foo")
             return db.query(
                 `UPDATE invoices SET amt=$1
                 WHERE id = $2
