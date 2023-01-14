@@ -40,11 +40,11 @@ companyRouter.get("/", async function list(req, resp, next) {
 companyRouter.post("/", async function add(req, resp, next) {
     // Add new company
     try {
-        const { code, name, description } = req.body;
-        if (!code || !name || !description) {
-            throw new expressError("Must include company code, name, and description", 400);
+        const { name, description } = req.body;
+        if (!name || !description) {
+            throw new expressError("Must include company name and description", 400);
         }
-        const result = await company.add(code, name, description);
+        const result = await company.add(name, description);
         return resp.status(201).json({ company: result.rows[0] });
     }
     catch (err) {

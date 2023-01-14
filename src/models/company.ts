@@ -1,3 +1,4 @@
+const slugify = require('slugify')
 const invoice = require('./invoice')
 const db = require('../db')
 
@@ -21,8 +22,10 @@ class Company {
         return db.query('SELECT * FROM companies')
     }
 
-    static async add(code: string, name: string, description: string) {
+    static async add(name: string, description: string) {
         // Add a new company
+        const code = slugify(name, {lower: true})
+        
         return db.query(
             `INSERT INTO companies (code, name, description)
             VALUES ($1, $2, $3)
