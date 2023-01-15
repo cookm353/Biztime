@@ -1,5 +1,5 @@
 const express = require('express')
-const expressError = require('../expressError')
+const ExpressError = require('../expressError')
 const invoice = require('../models/invoice')
 const db = require('../db')
 
