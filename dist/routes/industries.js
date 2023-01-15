@@ -37,7 +37,7 @@ industryRouter.post('/', async function add(req, resp, next) {
     try {
         const { name } = req.body;
         if (!name) {
-            throw new ExpressError("Must include industry name", 400);
+            throw new ExpressError("Must include industry name", 404);
         }
         const result = await industry.add(name);
         return resp.status(201).json(result.rows[0]);
