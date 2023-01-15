@@ -17,13 +17,15 @@ industryRouter.get('/:code', async function get(req, resp, next) {
     try {
         const { code } = req.params;
         const industryResults = await industry.get(code);
+        if (!industryResults.rows[0]) {
+            throw new ExpressError('Must enter a valid industry code', 404);
+        }
         let companyCodes = await company.getByIndustry(code);
         const industryDetails = industryResults.rows[0];
         companyCodes = companyCodes.rows.reduce((codesArr, currCode) => {
             codesArr.push(currCode.code);
             return codesArr;
         }, []);
-        console.log(companyCodes);
         industryDetails.company_codes = companyCodes;
         return resp.json({ industry: industryDetails });
     }
