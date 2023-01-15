@@ -1,7 +1,8 @@
 const express = require('express')
-const expressError = require('../expressError')
+const ExpressError = require('../expressError')
 const company = require("../models/company")
 const invoice = require('../models/invoice')
+const industry = require('../models/industry')
 const db = require('../db')
 
 let companyRouter = express.Router()
@@ -10,7 +11,8 @@ interface companyinfo {
     code: string,
     name: string,
     description: string,
-    invoices: Array<number>
+    invoices: Array<number>,
+    industries: Array<string>
 }
 
 companyRouter.get("/:code", async function get(req, resp, next) {
@@ -18,20 +20,29 @@ companyRouter.get("/:code", async function get(req, resp, next) {
     try {
         const { code } = req.params
         const results = await company.get(code)
-        console.log(results.rows)
         
         if (!results.rows[0]) {
             return next()
         }
         
         const invoices = await invoice.getByCode(code)
+        const invoiceCodes = invoices.rows.reduce((codeArr, currCode) => {
+            codeArr.push(currCode.id)
+            return codeArr
+        }, [])
+
+        const industries = await company.getIndustries(code)
+        const industriesList = industries.rows.reduce((indArr, currInd) => {
+            indArr.push(currInd.industry)
+            return indArr
+        }, [])
 
         const companyInfo: companyinfo = {
             code: results.rows[0].code,
             name: results.rows[0].name,
             description: results.rows[0].description,
-            invoices: invoices.rows
-
+            invoices: invoiceCodes,
+            industries: industriesList
         }
 
         return resp.json({"company": companyInfo})
@@ -56,7 +67,7 @@ companyRouter.post("/", async function add(req, resp, next) {
         const {name, description} = req.body
 
         if (!name || !description) {
-            throw new expressError("Must include company name and description", 400)
+            throw new ExpressError("Must include company name and description", 400)
         }
         const result = await company.add(name, description)
         return resp.status(201).json({company: result.rows[0]})
@@ -72,12 +83,12 @@ companyRouter.put("/:code", async function update(req, resp, next) {
         const {name, description} = req.body
 
         if (!name && !description) {
-            throw new expressError("Must include either name or description", 400)
+            throw new ExpressError("Must include either name or description", 400)
         }
         const result = await company.update(code, name, description)
 
         if (result === "Not found") {
-            throw new expressError("Company not found", 404)
+            throw new ExpressError("Company not found", 404)
         }
         return resp.json({company: result.rows[0]})
 
@@ -93,7 +104,7 @@ companyRouter.delete("/:code", async function remove(req, resp, next) {
         const result = await company.delete(code)
 
         if (result === "Not found") {
-            throw new expressError("Company not found", 404)
+            throw new ExpressError("Company not found", 404)
         }
         return resp.json({status: "deleted"})
     } catch (err) {
