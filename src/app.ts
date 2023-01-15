@@ -5,10 +5,12 @@ const app = express();
 const ExpressError = require("./expressError")
 const companyRouter = require("./routes/companies")
 const invoiceRouter = require("./routes/invoices")
+const industryRouter = require('./routes/industries')
 
 app.use(express.json())
 app.use('/companies', companyRouter)
 app.use('/invoices', invoiceRouter)
+app.use('/industries', industryRouter)
 app.use(morgan())
 
 /** 404 handler */
