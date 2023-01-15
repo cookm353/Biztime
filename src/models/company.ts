@@ -6,8 +6,6 @@ class Company {
     static async get(code: string) {
         // Return specified company or 404
         // const exists = Company.exists(code)
-        console.log(code)
-
         const result = await db.query(
             `SELECT code, name, description
             FROM companies
@@ -15,6 +13,35 @@ class Company {
         )
 
         return result
+    }
+
+    static async getIndustries(code: string) {
+        // Returns industries a company belongs to
+        const result = await db.query(
+            `SELECT industry
+            FROM companies AS c
+            JOIN company_industries
+                ON c.code = comp_code
+            JOIN industries AS i
+                ON ind_code = i.code
+            WHERE c.code = $1`,
+            [code]
+        )
+
+        return result
+    }
+
+    static async getByIndustry(ind_code: string) {
+        return db.query(
+            `SELECT c.code
+            FROM companies AS c
+            JOIN company_industries
+                ON c.code = comp_code
+            JOIN industries AS i
+                ON ind_code = i.code
+            WHERE i.code = $1`,
+            [ind_code]
+        )
     }
     
     static async getAll() {
