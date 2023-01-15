@@ -33,7 +33,7 @@ class Company {
 
     static async getByIndustry(ind_code: string) {
         return db.query(
-            `SELECT c.code
+            `SELECT DISTINCT c.code
             FROM companies AS c
             JOIN company_industries
                 ON c.code = comp_code
