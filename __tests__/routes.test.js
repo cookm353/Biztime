@@ -7,26 +7,41 @@ const db = require("../dist/db")
 
 let testCompany
 let testInvoice
+let testIndustry
 
 beforeEach(async() => {
     const companyResult = await db.query(
-            `INSERT INTO companies (code, name, description)
-            VALUES ('ibm', 'IBM', 'Big Blue')
-            RETURNING code, name, description`
-        )
+        `INSERT INTO companies (code, name, description)
+        VALUES ('ibm', 'IBM', 'Big Blue')
+        RETURNING code, name, description`
+    )
     testCompany = companyResult.rows[0]
 
     const invoiceResult = await db.query(
-            `INSERT INTO invoices (comp_code, amt, paid, paid_date)
-            VALUES ('ibm', 400, false, null)
-            RETURNING id, comp_code, amt, paid, add_date, paid_date`
-        )    
+        `INSERT INTO invoices (comp_code, amt, paid, paid_date)
+        VALUES ('ibm', 400, false, null)
+        RETURNING id, comp_code, amt, paid, add_date, paid_date`
+    )    
     testInvoice = invoiceResult.rows[0]
-    })
+    
+    const industryResult = await db.query(
+        `INSERT INTO industries (code, industry)
+        VALUES ('tech', 'Technology')
+        RETURNING code, industry`
+    )
+    testIndustry = industryResult.rows[0]
+
+    await db.query(
+        `INSERT INTO company_industries (ind_code, comp_code)
+        VALUES ('tech', 'ibm')`
+    )
+})
     
 afterEach(async () => {
     await db.query(`DELETE FROM companies`)
     await db.query(`DELETE FROM invoices`)
+    await db.query(`DELETE FROM industries`)
+    await db.query(`DELETE FROM company_industries`)
 })
 
 afterAll(async () => {
@@ -49,9 +64,10 @@ describe("GET /companies/:code", () => {
         expect(resp.statusCode).toBe(200)
         expect(resp.body).toEqual({company: {
             code: testCompany.code,
+            name: testCompany.name,
             description: testCompany.description,
             invoices: [testInvoice.id],
-            name: testCompany.name
+            industries: expect.any(Array)
         }})
     })
 
@@ -96,7 +112,7 @@ describe("POST /companies", () => {
         expect(resp.statusCode).toBe(400)
         expect(resp.body).toEqual({
             error: {
-                message: "Must include company code, name, and description",
+                message: "Must include company name and description",
                 status: 400
             }
         })
@@ -209,7 +225,6 @@ describe("POST /invoices", () => {
             .send(newInvoice)
 
         expect(resp.statusCode).toBe(201)
-        // console.log(resp.body)
         console.log(testInvoice.add_date)
     })
 })
@@ -218,8 +233,8 @@ describe('PUT /invoices/:id', () => {
     test("Updating invoice with valid id", async () => {
         const resp = await request(app)
             .put(`/invoices/${testInvoice.id}`)
-            .send({amt: 500})
-
+            .send({amt: 500, paid: 'false'})
+        
         expect(resp.statusCode).toBe(200)
         expect(resp.body.invoice.amt).toEqual(500)
     })
@@ -243,7 +258,74 @@ describe("DELETE /invoices/:id", () => {
 
     test("Delete invoice with invalid ID", async () => {
         const resp = await request(app).delete('/invoices/0')
+        expect(resp.statusCode).toBe(404)
+    })
+})
+
+/* Industry routes */
+
+describe('GET /industries', () => {
+    test("Get a list with one industry", async () => {
+        const resp = await request(app).get('/industries')
+
+        expect(resp.statusCode).toBe(200)
+        expect(resp.body).toEqual({industries: [testIndustry]})
+    })
+})
+
+describe('GET /industries/:code', () => {
+    test('Get a valid industry', async () => {
+        const resp = await request(app).get('/industries/tech')
+
+        expect(resp.statusCode).toBe(200)
+        testIndustry.company_codes = expect.any(Array)
+        expect(resp.body).toEqual({industry: testIndustry})
+    })
+
+    test('Get an invalid industry', async () => {
+        const resp = await request(app).get('/industries/film')
 
         expect(resp.statusCode).toBe(404)
+    })
+})
+
+describe("POST /industry", () => {
+    test("Add an industry", async () => {
+        const resp = await request(app)
+            .post('/industries')
+            .send({name: "Film"})
+
+        expect(resp.statusCode).toBe(201)
+        expect(resp.body).toEqual({
+                code: 'film',
+                industry: 'Film'
+        })
+    })
+
+    test("Add industry w/o specifying name", async () => {
+        const resp = await request(app).post('/industries')
+
+        expect(resp.statusCode).toBe(404)
+    })
+})
+
+describe('POST /industry/:code', () => {
+    test("Associate a company w/ an industry", async () => {
+        await request(app)
+            .post('/companies')
+            .send({
+                name: "Alphabet",
+                description: "Parent company of Google"
+            })
+        
+        const resp = await request(app)
+            .post('/industries/tech')
+            .send({compCode: 'alphabet'})
+
+        expect(resp.statusCode).toBe(201)
+        expect(resp.body).toEqual({
+            ind_code: "tech",
+            comp_code: "alphabet"
+        })
     })
 })
