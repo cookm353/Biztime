@@ -45,7 +45,7 @@ invoiceRouter.post("/", async function add(req, resp, next) {
     try {
         const { comp_code, amt } = req.body;
         if (!comp_code || !amt) {
-            throw new expressError("Must include company code and invoice amount", 400);
+            throw new ExpressError("Must include company code and invoice amount", 400);
         }
         const result = await invoice.add(comp_code, amt);
         return resp.status(201).json({ invoice: result.rows[0] });
@@ -59,11 +59,11 @@ invoiceRouter.put("/:id", async function update(req, resp, next) {
         const { id } = req.params;
         const { amt, paid } = req.body;
         if (amt === null || !paid) {
-            throw new expressError("Must include new invoice amount and if it's been paid", 404);
+            throw new ExpressError("Must include new invoice amount and if it's been paid", 404);
         }
         const result = await (invoice.update(id, amt, paid));
         if (result === "Not found") {
-            throw new expressError("Invoice not found", 404);
+            throw new ExpressError("Invoice not found", 404);
         }
         return resp.json({ invoice: result.rows[0] });
     }
@@ -76,7 +76,7 @@ invoiceRouter.delete("/:id", async function remove(req, resp, next) {
         const { id } = req.params;
         const result = await invoice.delete(id);
         if (result === "Not found") {
-            throw new expressError("Invoice not found", 404);
+            throw new ExpressError("Invoice not found", 404);
         }
         return resp.json({ status: "deleted" });
     }
