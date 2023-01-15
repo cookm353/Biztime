@@ -16,7 +16,7 @@ class Invoice {
     static async getByCode(code: string) {
         // Return invoices for specified company
         const results = await db.query(
-            `SELECT id, amt, paid, add_date, paid_date, comp_code
+            `SELECT id
             FROM invoices
             WHERE comp_code = $1`, [code]
         )
